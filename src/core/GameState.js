@@ -195,15 +195,87 @@ class GameState {
 
   getActiveTargetCoords() {
     const levelQuests = this.getQuestsForLevel(this.currentLevel);
+
+    // 1. Priority: Any quest ready to turn in
     for (const q of levelQuests) {
-      if (this.quests[q.id] === 'ready_to_turn_in') return q.coords.ready_to_turn_in;
+      if (this.quests[q.id] === 'ready_to_turn_in') {
+        return q.coords.ready_to_turn_in;
+      }
     }
+
+    // 2. Priority: Active quest with dynamic sub-step tracking
     for (const q of levelQuests) {
-      if (this.quests[q.id] === 'active') return q.coords.active;
+      if (this.quests[q.id] === 'active') {
+        // Level 1: Garden (Seeds -> Watering Can -> Unplanted Bed 1, 2, 3)
+        if (q.id === 'quest_garden') {
+          if (!this.hasItem('seed_bag')) return { x: 615, y: 860, label: 'Pick up Heirloom Seed Bag [G]' };
+          if (!this.hasItem('watering_can')) return { x: 945, y: 860, label: 'Pick up Copper Watering Can [G]' };
+          const bedCoords = [[705, 885], [780, 885], [855, 885]];
+          const nextBedIdx = this.worldFlags.gardenPlotsPlanted.findIndex((planted) => !planted);
+          if (nextBedIdx !== -1) {
+            return {
+              x: bedCoords[nextBedIdx][0],
+              y: bedCoords[nextBedIdx][1],
+              label: `Plant Garden Bed #${nextBedIdx + 1} [P]`
+            };
+          }
+        }
+
+        // Level 1: Community Food (Veggie Crate -> Bakery Loaves)
+        if (q.id === 'quest_food') {
+          if (!this.hasItem('fresh_produce')) return { x: 680, y: 960, label: 'Collect Harvest Veggie Crate [G]' };
+          if (!this.hasItem('bakery_loaves')) return { x: 1085, y: 365, label: 'Collect Warm Artisan Loaves [G]' };
+        }
+
+        // Level 1: Clinic Medicine (Pick up Kit -> Deliver to Mr. Henderson)
+        if (q.id === 'quest_medicine') {
+          if (!this.hasItem('clinic_supplies') && !this.worldFlags.hendersonDelivered) {
+            return { x: 1250, y: 910, label: 'Pick up Sealed Wellness Kit [G]' };
+          }
+          return { x: 1365, y: 555, label: 'Deliver to Mr. Henderson [T]' };
+        }
+
+        // Level 2: Sweeping Trash (Pick up Broom -> Sweep each remaining Trash Pile 1..8)
+        if (q.id === 'quest_sweep_village') {
+          if (!this.hasItem('bamboo_broom')) return { x: 640, y: 960, label: 'Equip Bamboo Broom [G]' };
+          const trashCoords = [
+            [480, 535], [610, 535], [780, 625], [950, 535],
+            [1080, 535], [780, 405], [780, 745], [350, 620]
+          ];
+          const nextTrashIdx = this.worldFlags.trashSwept.findIndex((swept) => !swept);
+          if (nextTrashIdx !== -1) {
+            return {
+              x: trashCoords[nextTrashIdx][0],
+              y: trashCoords[nextTrashIdx][1],
+              label: `Sweep Trash Pile (${nextTrashIdx + 1}/8)`
+            };
+          }
+        }
+
+        // Level 2: Leaking Water Taps (Fix Tap 1, 2, 3 automatically)
+        if (q.id === 'quest_water_saver') {
+          const tapCoords = [[520, 490], [920, 490], [1140, 700]];
+          const nextTapIdx = this.worldFlags.tapsFixed.findIndex((fixed) => !fixed);
+          if (nextTapIdx !== -1) {
+            return {
+              x: tapCoords[nextTapIdx][0],
+              y: tapCoords[nextTapIdx][1],
+              label: `Fix Leaking Water Tap #${nextTapIdx + 1} [F]`
+            };
+          }
+        }
+
+        return q.coords.active;
+      }
     }
+
+    // 3. Priority: Next available quest giver in the current level
     for (const q of levelQuests) {
-      if (this.quests[q.id] === 'not_started') return q.coords.not_started;
+      if (this.quests[q.id] === 'not_started') {
+        return q.coords.not_started;
+      }
     }
+
     return null;
   }
 

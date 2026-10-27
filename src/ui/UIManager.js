@@ -687,7 +687,6 @@ export class UIManager {
             <p class="quest-desc">${q.description}</p>
             <div class="quest-row-bottom">
               <span class="quest-obj">→ ${q.objectives[st]}</span>
-              <button class="ui-btn btn-small btn-locate-quest" data-quest="${q.id}">📍 Locate</button>
             </div>
           </div>
         `;

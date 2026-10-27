@@ -691,6 +691,30 @@ export class VillageScene extends Phaser.Scene {
       else if (st === 'completed') badge.setText('♥').setColor('#f43f5e').setVisible(true);
       else badge.setText('…').setColor('#fde68a').setVisible(true);
     });
+
+    // Automatically lock the world waypoint ring onto the current active task/object!
+    const autoTarget = gameState.getActiveTargetCoords();
+    if (autoTarget) {
+      this.waypointRing.setPosition(autoTarget.x, autoTarget.y).setVisible(true);
+      this.waypointLabel
+        .setPosition(autoTarget.x, autoTarget.y - 46)
+        .setText(`📍 ${autoTarget.label}`)
+        .setVisible(true);
+
+      if (!this.waypointPulseTween && !gameState.settings.reducedMotion) {
+        this.waypointPulseTween = this.tweens.add({
+          targets: this.waypointRing,
+          scale: { from: 0.85, to: 1.2 },
+          alpha: { from: 0.9, to: 0.35 },
+          duration: 750,
+          yoyo: true,
+          repeat: -1
+        });
+      }
+    } else {
+      this.waypointRing.setVisible(false);
+      this.waypointLabel.setVisible(false);
+    }
   }
 
   // --- LEVEL-AWARE NPC DIALOGUE HANDLERS ---
