@@ -475,15 +475,24 @@ export class UIManager {
     this.sagaNodesContainer.querySelectorAll('.btn-select-level').forEach((btn) => {
       btn.addEventListener('click', () => {
         const lvl = Number(btn.dataset.level);
+        const stats = gameState.getProgressStats(lvl);
+        const isCompleted = stats.completedCount === stats.totalQuests;
+
         eventBus.emit('sfx:click');
-        gameState.selectLevel(lvl);
+
+        if (isCompleted) {
+          gameState.replayLevel(lvl);
+          this.showToast(`🔄 Restarted Level ${lvl} from Task 1!`);
+        } else {
+          gameState.selectLevel(lvl);
+          this.showToast(`Entered ${LEVELS_META.find((l) => l.level === lvl).title}!`);
+        }
+
         this.sagaMapModal.classList.add('hidden');
         this.startGameplay();
 
         if (lvl === 1 && !gameState.tutorialSeen) {
           setTimeout(() => this.startTutorial(), 250);
-        } else {
-          this.showToast(`Entered ${LEVELS_META.find((l) => l.level === lvl).title}!`);
         }
       });
     });

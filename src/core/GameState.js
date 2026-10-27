@@ -138,6 +138,57 @@ class GameState {
     return true;
   }
 
+  replayLevel(levelNum) {
+    const meta = LEVELS_META.find((l) => l.level === levelNum);
+    if (!meta || !meta.playable) return false;
+
+    this.currentLevel = levelNum;
+
+    // 1. Reset all quests belonging to this level back to 'not_started'
+    const levelQuests = this.getQuestsForLevel(levelNum);
+    levelQuests.forEach((q) => {
+      this.quests[q.id] = 'not_started';
+    });
+
+    // 2. Reset level-specific world flags & leftover items so tasks are playable from scratch
+    if (levelNum === 1) {
+      this.worldFlags.grandmaFlowersBloomed = false;
+      this.worldFlags.libraryNookBuilt = false;
+      this.worldFlags.gardenPlotsPlanted = [false, false, false];
+      this.worldFlags.gardenRestored = false;
+      this.worldFlags.communityMealActive = false;
+      this.worldFlags.hendersonDelivered = false;
+      this.worldFlags.talkedToSam = false;
+      this.worldFlags.talkedToElena = false;
+      this.worldFlags.plazaResolution = null;
+      [
+        'grocery_package',
+        'book_stack',
+        'seed_bag',
+        'watering_can',
+        'fresh_produce',
+        'bakery_loaves',
+        'clinic_supplies'
+      ].forEach((id) => delete this.inventory[id]);
+    } else if (levelNum === 2) {
+      this.worldFlags.trashSwept = [false, false, false, false, false, false, false, false];
+      this.worldFlags.recyclingStationBuilt = false;
+      this.worldFlags.tapsFixed = [false, false, false];
+      ['bamboo_broom', 'recyclable_bundle'].forEach((id) => delete this.inventory[id]);
+    } else if (levelNum === 3) {
+      this.worldFlags.elderTeaServed = false;
+      this.worldFlags.watchReturned = false;
+      this.worldFlags.lanternFestivalActive = false;
+      ['chamomile_tea', 'vintage_watch', 'welcome_card'].forEach((id) => delete this.inventory[id]);
+    }
+
+    this.save({ x: 780, y: 580 });
+    this.emitStateChange();
+    eventBus.emit('game:reset-position');
+    eventBus.emit('level:changed', levelNum);
+    return true;
+  }
+
   getQuestsForLevel(levelNum = this.currentLevel) {
     return Object.values(QUESTS_DATA).filter((q) => q.level === levelNum);
   }
