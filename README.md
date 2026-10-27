@@ -138,11 +138,3 @@ npm run preview
 * **Code License:** Licensed under the [MIT License](https://www.google.com/search?q=LICENSE).
 * **Typography:** Fredoka and Nunito via Google Fonts (SIL Open Font License).
 * **Graphics & Audio:** Procedurally generated via HTML5 Canvas (`BootScene.js`) and synthesized via the Web Audio API (`AudioManager.js`).
-
-```
-
-<ElicitationsGroup>
-Would you like to add any extra details like live demo URLs, continuous integration badges, or contributing guidelines?
-</ElicitationsGroup>
-
-```
