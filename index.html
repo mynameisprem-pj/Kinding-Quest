@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Kindness Quest — Havenwood Village</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div id="app">
+    <div id="game-container"></div>
+
+    <div id="ui-layer">
+      <!-- 1. CLEAN TITLE SCREEN (Only ONE Button: Play Game) -->
+      <section id="main-menu" class="main-menu-overlay">
+        <div class="menu-card">
+          <div class="menu-pill">🌱 A Multi-Level Social-Good Adventure</div>
+          <h1 class="game-logo">Kindness Quest</h1>
+          <p class="game-tagline">
+            Explore Havenwood Village, lend a helping hand to your neighbors, and watch every small act of kindness transform the community.
+          </p>
+
+          <div class="menu-buttons">
+            <button id="btn-menu-play" class="ui-btn btn-gold btn-large">▶ Play Game</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. CANDY CRUSH WINDING SAGA MAP SCREEN -->
+      <section id="saga-map-modal" class="saga-map-screen hidden">
+        <div class="saga-map-board">
+          <header class="saga-map-header">
+            <button id="btn-saga-back" class="ui-btn btn-secondary btn-small">◀ Title</button>
+            <div class="saga-header-center">
+              <h2>🗺️ Havenwood Kindness Map</h2>
+              <p>Select a Level to begin your journey</p>
+            </div>
+            <button id="btn-judge-unlock" class="ui-btn btn-small">🔒 Judge Mode: OFF</button>
+          </header>
+
+          <!-- Winding Trail Map Path -->
+          <div id="saga-nodes-container" class="saga-trail-viewport"></div>
+        </div>
+      </section>
+
+      <!-- 3. TOP GAMEPLAY HUD -->
+      <header id="hud-top" class="hud-panel hidden">
+        <div id="hud-left-stats" class="hud-left-group">
+          <div class="stat-badge kindness-badge" title="Kindness Score">
+            <span class="badge-icon">💛</span>
+            <div>
+              <div class="badge-label">Kindness</div>
+              <div id="hud-kindness-score" class="badge-value">0</div>
+            </div>
+          </div>
+
+          <div class="stat-badge progress-badge" title="Current Level Progress">
+            <span id="hud-level-icon" class="badge-icon">🤝</span>
+            <div>
+              <div id="hud-level-title" class="badge-label">Level 1</div>
+              <div id="hud-village-progress" class="badge-value">0/6 (0%)</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="hud-goal-box" class="objective-banner">
+          <span class="objective-label">Goal:</span>
+          <span id="hud-objective-text">Explore Havenwood</span>
+        </div>
+
+        <div id="hud-right-buttons" class="hud-actions">
+          <button id="btn-open-map" class="ui-btn btn-gold">🗺️ Levels (M)</button>
+          <button id="btn-open-journal" class="ui-btn">📖 Quests (J)</button>
+          <button id="btn-open-pause" class="ui-btn btn-secondary">⏸</button>
+        </div>
+      </header>
+
+      <!-- 4. BOTTOM INVENTORY BAR -->
+      <div id="hud-inventory" class="inventory-bar hidden">
+        <span class="inv-title">🎒 Backpack:</span>
+        <div id="inventory-slots" class="inventory-slots">
+          <span class="inv-empty">Empty</span>
+        </div>
+      </div>
+
+      <!-- 5. FIRST-TIME LEVEL 1 INTERACTIVE ARROW TUTORIAL OVERLAY -->
+      <div id="tutorial-overlay" class="tutorial-overlay hidden">
+        <div id="tutorial-pointer" class="tutorial-pointer">
+          <div id="tutorial-arrow" class="tutorial-arrow">⬇</div>
+          <div class="tutorial-card">
+            <div id="tutorial-step-badge" class="tutorial-step-badge">Step 1 of 4</div>
+            <h3 id="tutorial-title">Welcome to Havenwood!</h3>
+            <p id="tutorial-desc">Here is where you track your Kindness Score.</p>
+            <div class="tutorial-actions">
+              <button id="btn-tutorial-skip" class="ui-btn btn-small btn-secondary">Skip</button>
+              <button id="btn-tutorial-next" class="ui-btn btn-gold btn-small">Next ➔</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. FLOATING INTERACTION PROMPT -->
+      <div id="interaction-prompt" class="interaction-prompt hidden">
+        <span class="key-badge">E</span>
+        <span id="interaction-prompt-text">Talk to Villager</span>
+      </div>
+
+      <!-- 7. DIALOGUE MODAL -->
+      <div id="dialogue-modal" class="dialogue-modal hidden">
+        <div class="dialogue-header">
+          <div id="dialogue-speaker" class="dialogue-speaker">Villager Name</div>
+          <div id="dialogue-role" class="dialogue-role">Resident</div>
+        </div>
+        <p id="dialogue-text" class="dialogue-text">Dialogue goes here...</p>
+        <div id="dialogue-choices" class="dialogue-choices"></div>
+      </div>
+
+      <!-- 8. QUEST JOURNAL MODAL -->
+      <div id="journal-modal" class="modal-backdrop hidden">
+        <div class="journal-card">
+          <div class="journal-header">
+            <div>
+              <h2 id="journal-heading">📖 Level 1 Quest Journal</h2>
+              <p id="journal-subtitle" class="journal-subtitle">0 of 6 Quests Completed</p>
+            </div>
+            <button id="btn-close-journal" class="ui-btn btn-small">✕ Close</button>
+          </div>
+
+          <div id="journal-badges" class="journal-badges"></div>
+          <div id="journal-list" class="journal-list"></div>
+        </div>
+      </div>
+
+      <!-- 9. PAUSE MENU MODAL -->
+      <div id="pause-modal" class="modal-backdrop hidden">
+        <div class="small-modal-card">
+          <h2>⏸ Game Paused</h2>
+          <p class="modal-body-text">Take a breather! Havenwood Village is waiting for you.</p>
+          <div class="pause-menu-stack">
+            <button id="btn-pause-resume" class="ui-btn btn-large">▶ Resume Game</button>
+            <button id="btn-pause-map" class="ui-btn btn-gold">🗺️ Level Map</button>
+            <button id="btn-pause-journal" class="ui-btn btn-secondary">📖 Quest Journal</button>
+            <button id="btn-pause-settings" class="ui-btn btn-secondary">⚙ Audio & Motion Settings</button>
+            <button id="btn-pause-restart" class="ui-btn btn-small">↺ Reset All Progress</button>
+            <button id="btn-pause-mainmenu" class="ui-btn btn-small">🏠 Return to Title Screen</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 10. QUEST / LEVEL COMPLETION CELEBRATION MODAL -->
+      <div id="completion-modal" class="modal-backdrop hidden">
+        <div class="small-modal-card celebration-card">
+          <div class="celebration-icon" id="completion-icon">🌟</div>
+          <h2 id="completion-title">Quest Completed!</h2>
+          <p id="completion-quest-name" class="completion-quest-name">Groceries for Grandma</p>
+
+          <div class="reward-summary-box">
+            <div id="completion-points" class="reward-line">+25 Kindness Points 💛</div>
+            <div id="completion-badge" class="reward-line">🏅 Good Neighbor Badge</div>
+            <p id="completion-impact" class="impact-line">Grandma Evelyn planted flower boxes outside her cottage!</p>
+          </div>
+
+          <div class="completion-actions">
+            <button id="btn-next-level-map" class="ui-btn btn-gold btn-large hidden">🗺️ Next Level Unlocked! Open Map</button>
+            <button id="btn-close-completion" class="ui-btn btn-large">Continue Playing</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 11. SETTINGS MODAL -->
+      <div id="settings-modal" class="modal-backdrop hidden">
+        <div class="small-modal-card">
+          <div class="journal-header">
+            <h2>⚙ Game Settings</h2>
+            <button id="btn-close-settings" class="ui-btn btn-small">✕ Close</button>
+          </div>
+
+          <div class="settings-form">
+            <label class="setting-row">
+              <span>🎵 Music Volume (<span id="val-music-vol">70</span>%)</span>
+              <input type="range" id="input-music-vol" min="0" max="100" value="70" />
+            </label>
+            <label class="setting-row">
+              <span>🔔 Sound Effects (<span id="val-sfx-vol">85</span>%)</span>
+              <input type="range" id="input-sfx-vol" min="0" max="100" value="85" />
+            </label>
+            <label class="setting-row checkbox-row">
+              <span>✨ Reduced Motion</span>
+              <input type="checkbox" id="input-reduced-motion" />
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- 12. ITEM INFO MODAL -->
+      <div id="info-modal" class="modal-backdrop hidden">
+        <div class="small-modal-card">
+          <div class="journal-header">
+            <h2 id="info-modal-title">Item Details</h2>
+            <button id="btn-close-info" class="ui-btn btn-small">✕ Close</button>
+          </div>
+          <div id="info-modal-body" class="info-modal-body"></div>
+        </div>
+      </div>
+
+      <!-- 13. TOAST NOTIFICATION -->
+      <div id="toast-notification" class="toast-notification hidden"></div>
+
+      <!-- 14. MOBILE TOUCH CONTROLS -->
+      <div id="mobile-controls" class="mobile-controls hidden">
+        <div class="dpad">
+          <button class="dpad-btn up" data-dir="up">▲</button>
+          <button class="dpad-btn left" data-dir="left">◀</button>
+          <button class="dpad-btn right" data-dir="right">▶</button>
+          <button class="dpad-btn down" data-dir="down">▼</button>
+        </div>
+        <button id="mobile-action-btn" class="mobile-action-btn">ACT</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
