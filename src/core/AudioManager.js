@@ -50,6 +50,7 @@ class AudioManager {
     eventBus.on('sfx:step', () => this.playTone(145, 0.04, 'triangle', 0.35));
     eventBus.on('sfx:VoiceBlip', () => this.playTone(420 + Math.random() * 90, 0.035, 'sine', 0.35));
     eventBus.on('sfx:pickup', () => this.playArpeggio([392.0, 523.25, 659.25], 0.07));
+    eventBus.on('sfx:coin', (step = 0) => this.playTone(620 + step * 55, 0.06, 'triangle', 0.9));
     eventBus.on('sfx:quest-start', () => this.playArpeggio([329.63, 440.0, 523.25], 0.08));
     eventBus.on('quest:completed', () => this.playArpeggio([261.63, 329.63, 392.0, 523.25, 659.25], 0.11));
   }

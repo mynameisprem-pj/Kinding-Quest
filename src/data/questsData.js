@@ -7,6 +7,7 @@ export const LEVELS_META = [
     skyTint: 0x000000,
     skyAlpha: 0,
     description: 'Help neighbors with everyday challenges—delivering groceries, sharing books, planting the garden, and cooking a community feast.',
+    realWorldFact: '🌍 Real-World Impact: 1 in 4 seniors faces mobility or social isolation challenges. Checking in on a neighbor for just 10 minutes a week measurably improves community health and trust.',
     playable: true
   },
   {
@@ -17,6 +18,7 @@ export const LEVELS_META = [
     skyTint: 0xfef08a,
     skyAlpha: 0.08,
     description: 'A windstorm left litter across Havenwood! Grab a broom to sweep the streets, sort recyclables, and shut off leaking water taps.',
+    realWorldFact: '🌍 Real-World Impact: A single leaking water tap can waste over 3,000 gallons a year, and clean neighborhood streets reduce local waterway pollution by up to 60%.',
     playable: true
   },
   {
@@ -27,6 +29,7 @@ export const LEVELS_META = [
     skyTint: 0xf97316,
     skyAlpha: 0.14,
     description: 'Practice respectful greetings with village elders, recover cherished memories, and help a shy newcomer feel welcome.',
+    realWorldFact: '🌍 Real-World Impact: Intergenerational connection and active inclusion reduce youth anxiety and preserve priceless cultural wisdom in our communities.',
     playable: true
   },
   {

@@ -14,7 +14,7 @@
     <div id="game-container"></div>
 
     <div id="ui-layer">
-      <!-- 1. CLEAN TITLE SCREEN (Only ONE Button: Play Game) -->
+      <!-- 1. CLEAN TITLE SCREEN -->
       <section id="main-menu" class="main-menu-overlay">
         <div class="menu-card">
           <div class="menu-pill">🌱 A Multi-Level Social-Good Adventure</div>
@@ -29,7 +29,7 @@
         </div>
       </section>
 
-      <!-- 2. CANDY CRUSH WINDING SAGA MAP SCREEN -->
+      <!-- 2. LEVEL PROGRESSION MAP -->
       <section id="saga-map-modal" class="saga-map-screen hidden">
         <div class="saga-map-board">
           <header class="saga-map-header">
@@ -41,46 +41,49 @@
             <button id="btn-judge-unlock" class="ui-btn btn-small">🔒 Judge Mode: OFF</button>
           </header>
 
-          <!-- Winding Trail Map Path -->
           <div id="saga-nodes-container" class="saga-trail-viewport"></div>
         </div>
       </section>
 
-      <!-- 3. TOP GAMEPLAY HUD -->
+      <!-- 3. DE-CLUTTERED TOP GAMEPLAY HUD -->
       <header id="hud-top" class="hud-panel hidden">
-        <div id="hud-left-stats" class="hud-left-group">
-          <div class="stat-badge kindness-badge" title="Kindness Score">
-            <span class="badge-icon">💛</span>
-            <div>
-              <div class="badge-label">Kindness</div>
-              <div id="hud-kindness-score" class="badge-value">0</div>
+        <!-- Top Row: Compact Badges & Visible Icon Buttons -->
+        <div class="hud-bar-main">
+          <div id="hud-left-stats" class="hud-left-group">
+            <div id="kindness-score-badge" class="stat-badge kindness-badge" title="Kindness Score">
+              <span class="badge-icon">💛</span>
+              <span id="hud-kindness-score" class="badge-value">0</span>
+            </div>
+
+            <div class="stat-badge progress-badge" title="Current Level Progress">
+              <span id="hud-level-icon" class="badge-icon">🤝</span>
+              <span id="hud-level-title" class="badge-level-tag">Lv.1</span>
+              <span id="hud-village-progress" class="badge-value">0/6</span>
             </div>
           </div>
 
-          <div class="stat-badge progress-badge" title="Current Level Progress">
-            <span id="hud-level-icon" class="badge-icon">🤝</span>
-            <div>
-              <div id="hud-level-title" class="badge-label">Level 1</div>
-              <div id="hud-village-progress" class="badge-value">0/6 (0%)</div>
-            </div>
+          <div id="hud-right-buttons" class="hud-actions">
+            <button id="btn-open-map" class="ui-btn btn-gold btn-hud" title="Level Map (M)">
+              <span>🗺️</span><span class="btn-text-desktop">Levels</span>
+            </button>
+            <button id="btn-open-journal" class="ui-btn btn-hud" title="Quest Journal (J)">
+              <span>📖</span><span class="btn-text-desktop">Quests</span>
+            </button>
+            <button id="btn-open-settings" class="ui-btn btn-secondary btn-icon-only" title="Settings">⚙️</button>
+            <button id="btn-open-pause" class="ui-btn btn-secondary btn-icon-only" title="Pause (Esc)">⏸️</button>
           </div>
         </div>
 
-        <div id="hud-goal-box" class="objective-banner">
-          <span class="objective-label">Goal:</span>
-          <span id="hud-objective-text">Explore Havenwood</span>
-        </div>
-
-        <div id="hud-right-buttons" class="hud-actions">
-          <button id="btn-open-map" class="ui-btn btn-gold">🗺️ Levels (M)</button>
-          <button id="btn-open-journal" class="ui-btn">📖 Quests (J)</button>
-          <button id="btn-open-pause" class="ui-btn btn-secondary">⏸</button>
+        <!-- Sleek Compact Task Pill -->
+        <div id="hud-goal-box" class="objective-pill">
+          <span class="goal-dot">🎯</span>
+          <span id="hud-objective-text" class="goal-text">Explore Havenwood</span>
         </div>
       </header>
 
-      <!-- 4. BOTTOM INVENTORY BAR -->
+      <!-- 4. COMPACT BOTTOM INVENTORY BAR -->
       <div id="hud-inventory" class="inventory-bar hidden">
-        <span class="inv-title">🎒 Backpack:</span>
+        <span class="inv-title">🎒</span>
         <div id="inventory-slots" class="inventory-slots">
           <span class="inv-empty">Empty</span>
         </div>
@@ -102,9 +105,9 @@
         </div>
       </div>
 
-      <!-- 6. FLOATING INTERACTION PROMPT -->
+      <!-- 6. CONTEXT-SENSITIVE FLOATING INTERACTION PROMPT -->
       <div id="interaction-prompt" class="interaction-prompt hidden">
-        <span class="key-badge">E</span>
+        <span id="interaction-key-badge" class="key-badge">T</span>
         <span id="interaction-prompt-text">Talk to Villager</span>
       </div>
 
@@ -126,7 +129,7 @@
               <h2 id="journal-heading">📖 Level 1 Quest Journal</h2>
               <p id="journal-subtitle" class="journal-subtitle">0 of 6 Quests Completed</p>
             </div>
-            <button id="btn-close-journal" class="ui-btn btn-small">✕ Close</button>
+            <button id="btn-close-journal" class="ui-btn btn-small">✕</button>
           </div>
 
           <div id="journal-badges" class="journal-badges"></div>
@@ -143,18 +146,18 @@
             <button id="btn-pause-resume" class="ui-btn btn-large">▶ Resume Game</button>
             <button id="btn-pause-map" class="ui-btn btn-gold">🗺️ Level Map</button>
             <button id="btn-pause-journal" class="ui-btn btn-secondary">📖 Quest Journal</button>
-            <button id="btn-pause-settings" class="ui-btn btn-secondary">⚙ Audio & Motion Settings</button>
+            <button id="btn-pause-settings" class="ui-btn btn-secondary">⚙️ Audio & Motion Settings</button>
             <button id="btn-pause-restart" class="ui-btn btn-small">↺ Reset All Progress</button>
             <button id="btn-pause-mainmenu" class="ui-btn btn-small">🏠 Return to Title Screen</button>
           </div>
         </div>
       </div>
 
-      <!-- 10. QUEST / LEVEL COMPLETION CELEBRATION MODAL -->
+      <!-- 10. QUEST / LEVEL COMPLETION CELEBRATION MODAL (With Claim Rewards & Real-World Fact) -->
       <div id="completion-modal" class="modal-backdrop hidden">
         <div class="small-modal-card celebration-card">
           <div class="celebration-icon" id="completion-icon">🌟</div>
-          <h2 id="completion-title">Quest Completed!</h2>
+          <h2 id="completion-title">Task Completed!</h2>
           <p id="completion-quest-name" class="completion-quest-name">Groceries for Grandma</p>
 
           <div class="reward-summary-box">
@@ -163,9 +166,13 @@
             <p id="completion-impact" class="impact-line">Grandma Evelyn planted flower boxes outside her cottage!</p>
           </div>
 
+          <!-- Hackathon Purpose Pillar: Real-World Social Impact Insight -->
+          <div id="completion-realworld-box" class="realworld-fact-box">
+            <p id="completion-realworld-text"></p>
+          </div>
+
           <div class="completion-actions">
-            <button id="btn-next-level-map" class="ui-btn btn-gold btn-large hidden">🗺️ Next Level Unlocked! Open Map</button>
-            <button id="btn-close-completion" class="ui-btn btn-large">Continue Playing</button>
+            <button id="btn-claim-rewards" class="ui-btn btn-gold btn-large pulse-btn">🎁 Claim +25 💛 Rewards!</button>
           </div>
         </div>
       </div>
@@ -174,8 +181,8 @@
       <div id="settings-modal" class="modal-backdrop hidden">
         <div class="small-modal-card">
           <div class="journal-header">
-            <h2>⚙ Game Settings</h2>
-            <button id="btn-close-settings" class="ui-btn btn-small">✕ Close</button>
+            <h2>⚙️ Game Settings</h2>
+            <button id="btn-close-settings" class="ui-btn btn-small">✕</button>
           </div>
 
           <div class="settings-form">
@@ -200,7 +207,7 @@
         <div class="small-modal-card">
           <div class="journal-header">
             <h2 id="info-modal-title">Item Details</h2>
-            <button id="btn-close-info" class="ui-btn btn-small">✕ Close</button>
+            <button id="btn-close-info" class="ui-btn btn-small">✕</button>
           </div>
           <div id="info-modal-body" class="info-modal-body"></div>
         </div>
@@ -209,15 +216,27 @@
       <!-- 13. TOAST NOTIFICATION -->
       <div id="toast-notification" class="toast-notification hidden"></div>
 
-      <!-- 14. MOBILE TOUCH CONTROLS -->
+      <!-- 14. DRAGGABLE & CUSTOMIZABLE MOBILE CONTROLS -->
       <div id="mobile-controls" class="mobile-controls hidden">
-        <div class="dpad">
-          <button class="dpad-btn up" data-dir="up">▲</button>
-          <button class="dpad-btn left" data-dir="left">◀</button>
-          <button class="dpad-btn right" data-dir="right">▶</button>
-          <button class="dpad-btn down" data-dir="down">▼</button>
+        <!-- Toggle to Drag/Reposition Mobile Controls anywhere on screen -->
+        <button id="btn-toggle-layout-drag" class="layout-drag-toggle" title="Drag & Reposition Controls">
+          ✋ Move Controls: OFF
+        </button>
+
+        <!-- Smooth Draggable Virtual Analog Joystick -->
+        <div id="joystick-zone" class="joystick-zone">
+          <div id="joystick-base" class="joystick-base">
+            <div id="joystick-stick" class="joystick-stick">
+              <span class="stick-arrows">✥</span>
+            </div>
+          </div>
         </div>
-        <button id="mobile-action-btn" class="mobile-action-btn">ACT</button>
+
+        <!-- Dynamic Context Action Button -->
+        <button id="mobile-action-btn" class="mobile-action-btn">
+          <span id="mobile-action-icon" class="mobile-act-icon">✋</span>
+          <span id="mobile-action-key" class="mobile-act-key">ACT</span>
+        </button>
       </div>
     </div>
   </div>

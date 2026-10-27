@@ -21,15 +21,14 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       right: Phaser.Input.Keyboard.KeyCodes.D
     });
 
-    this.touchDir = { up: false, down: false, left: false, right: false };
+    this.joyVector = { x: 0, y: 0 };
     this.movementLocked = false;
     this.stepTimer = 0;
   }
 
-  setTouchDirection(dir, isPressed) {
-    if (dir in this.touchDir) {
-      this.touchDir[dir] = isPressed;
-    }
+  setJoystickVector(vx, vy) {
+    this.joyVector.x = vx;
+    this.joyVector.y = vy;
   }
 
   update(time = 0, delta = 16) {
@@ -42,18 +41,13 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
     let vx = 0;
     let vy = 0;
 
-    const left = this.cursors.left.isDown || this.wasd.left.isDown || this.touchDir.left;
-    const right = this.cursors.right.isDown || this.wasd.right.isDown || this.touchDir.right;
-    const up = this.cursors.up.isDown || this.wasd.up.isDown || this.touchDir.up;
-    const down = this.cursors.down.isDown || this.wasd.down.isDown || this.touchDir.down;
+    const left = this.cursors.left.isDown || this.wasd.left.isDown;
+    const right = this.cursors.right.isDown || this.wasd.right.isDown;
+    const up = this.cursors.up.isDown || this.wasd.up.isDown;
+    const down = this.cursors.down.isDown || this.wasd.down.isDown;
 
-    if (left) {
-      vx = -1;
-      this.setFlipX(true);
-    } else if (right) {
-      vx = 1;
-      this.setFlipX(false);
-    }
+    if (left) vx = -1;
+    else if (right) vx = 1;
 
     if (up) vy = -1;
     else if (down) vy = 1;
@@ -63,10 +57,19 @@ export class Player extends Phaser.Physics.Arcade.Sprite {
       vy *= Math.SQRT1_2;
     }
 
+    // Use analog mobile joystick if active
+    if (Math.abs(this.joyVector.x) > 0.05 || Math.abs(this.joyVector.y) > 0.05) {
+      vx = this.joyVector.x;
+      vy = this.joyVector.y;
+    }
+
+    if (vx < -0.1) this.setFlipX(true);
+    else if (vx > 0.1) this.setFlipX(false);
+
     this.setVelocity(vx * this.speed, vy * this.speed);
     this.setDepth(this.y);
 
-    const isMoving = vx !== 0 || vy !== 0;
+    const isMoving = Math.abs(vx) > 0.05 || Math.abs(vy) > 0.05;
 
     if (isMoving) {
       if (!gameState.settings.reducedMotion) {

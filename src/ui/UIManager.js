@@ -7,27 +7,36 @@ export class UIManager {
   constructor() {
     this.inMainMenu = true;
     this.tutorialStepIndex = 0;
+    this.layoutEditMode = false;
+    this.pendingRewardPayload = null;
 
     this.mainMenuEl = document.getElementById('main-menu');
     this.hudTopEl = document.getElementById('hud-top');
     this.hudInvEl = document.getElementById('hud-inventory');
     this.mobileControlsEl = document.getElementById('mobile-controls');
 
+    this.scoreBadgeEl = document.getElementById('kindness-score-badge');
     this.scoreEl = document.getElementById('hud-kindness-score');
     this.levelIconEl = document.getElementById('hud-level-icon');
     this.levelTitleEl = document.getElementById('hud-level-title');
     this.progressEl = document.getElementById('hud-village-progress');
     this.objectiveEl = document.getElementById('hud-objective-text');
     this.invSlotsEl = document.getElementById('inventory-slots');
+
     this.promptEl = document.getElementById('interaction-prompt');
+    this.promptKeyBadgeEl = document.getElementById('interaction-key-badge');
     this.promptTextEl = document.getElementById('interaction-prompt-text');
+
+    this.mobileActionBtn = document.getElementById('mobile-action-btn');
+    this.mobileActionIcon = document.getElementById('mobile-action-icon');
+    this.mobileActionKey = document.getElementById('mobile-action-key');
 
     // Saga Map Screen
     this.sagaMapModal = document.getElementById('saga-map-modal');
     this.sagaNodesContainer = document.getElementById('saga-nodes-container');
     this.btnJudgeUnlock = document.getElementById('btn-judge-unlock');
 
-    // Tutorial Overlay Elements
+    // Tutorial Overlay
     this.tutorialOverlay = document.getElementById('tutorial-overlay');
     this.tutorialPointer = document.getElementById('tutorial-pointer');
     this.tutorialArrow = document.getElementById('tutorial-arrow');
@@ -50,7 +59,7 @@ export class UIManager {
 
     this.pauseModal = document.getElementById('pause-modal');
     this.completionModal = document.getElementById('completion-modal');
-    this.btnNextLevelMap = document.getElementById('btn-next-level-map');
+    this.btnClaimRewards = document.getElementById('btn-claim-rewards');
     this.settingsModal = document.getElementById('settings-modal');
     this.infoModal = document.getElementById('info-modal');
 
@@ -61,18 +70,16 @@ export class UIManager {
     this.bindMenuButtons();
     this.bindTutorialControls();
     this.bindSettingsControls();
-    this.bindMobileControls();
+    this.bindAnalogJoystickAndDraggableUI();
   }
 
   bindMenuButtons() {
-    // Single "Play Game" button on Title Screen opens the Candy Crush Saga Map
     document.getElementById('btn-menu-play').addEventListener('click', () => {
       eventBus.emit('sfx:click');
       this.mainMenuEl.classList.add('hidden');
       this.openSagaMap();
     });
 
-    // Back to Title Screen from Saga Map
     document.getElementById('btn-saga-back').addEventListener('click', () => {
       eventBus.emit('sfx:click');
       this.sagaMapModal.classList.add('hidden');
@@ -92,15 +99,14 @@ export class UIManager {
       this.openSagaMap();
     });
 
+    document.getElementById('btn-open-settings').addEventListener('click', () => {
+      eventBus.emit('sfx:click');
+      this.openSettings();
+    });
+
     document.getElementById('btn-pause-map').addEventListener('click', () => {
       eventBus.emit('sfx:click');
       this.togglePause(false);
-      this.openSagaMap();
-    });
-
-    document.getElementById('btn-next-level-map').addEventListener('click', () => {
-      eventBus.emit('sfx:click');
-      this.completionModal.classList.add('hidden');
       this.openSagaMap();
     });
 
@@ -132,38 +138,207 @@ export class UIManager {
       this.returnToMainMenu();
     });
 
-    document.getElementById('btn-close-completion').addEventListener('click', () => {
-      this.completionModal.classList.add('hidden');
-      this.syncMovementLock();
+    // Claim Rewards Button -> Launches Flying Coin Animation & Sound Effects!
+    this.btnClaimRewards.addEventListener('click', () => {
+      if (!this.pendingRewardPayload) return;
+      this.btnClaimRewards.disabled = true;
+      this.animateClaimRewards(this.pendingRewardPayload);
     });
   }
 
-  // --- INTERACTIVE 4-STEP ARROW COACH FOR FIRST-TIME LEVEL 1 ---
+  // --- JUICY FLYING REWARD ANIMATION & SOUND EFFECTS ---
+  animateClaimRewards({ totalEarned, isLevelComplete }) {
+    const startRect = this.btnClaimRewards.getBoundingClientRect();
+    const targetRect = this.scoreBadgeEl.getBoundingClientRect();
+
+    const startX = startRect.left + startRect.width / 2;
+    const startY = startRect.top + startRect.height / 2;
+    const endX = targetRect.left + targetRect.width / 2;
+    const endY = targetRect.top + targetRect.height / 2;
+
+    const coinCount = 8;
+    const pointsPerCoin = Math.floor(totalEarned / coinCount);
+    let remainder = totalEarned - pointsPerCoin * coinCount;
+
+    for (let i = 0; i < coinCount; i++) {
+      setTimeout(() => {
+        const coin = document.createElement('div');
+        coin.className = 'flying-reward-coin';
+        coin.textContent = '💛';
+        coin.style.left = `${startX - 14 + (Math.random() * 40 - 20)}px`;
+        coin.style.top = `${startY - 14 + (Math.random() * 24 - 12)}px`;
+        document.body.appendChild(coin);
+
+        // Trigger transition to Top-Left Score Badge
+        requestAnimationFrame(() => {
+          const dx = endX - startX;
+          const dy = endY - startY;
+          coin.style.transform = `translate(${dx}px, ${dy}px) scale(0.55)`;
+          coin.style.opacity = '0.2';
+        });
+
+        setTimeout(() => {
+          coin.remove();
+          eventBus.emit('sfx:coin', i);
+          const addAmt = i === coinCount - 1 ? pointsPerCoin + remainder : pointsPerCoin;
+          gameState.addClaimedPoints(addAmt);
+
+          this.scoreBadgeEl.classList.add('score-bump');
+          setTimeout(() => this.scoreBadgeEl.classList.remove('score-bump'), 160);
+
+          if (i === coinCount - 1) {
+            setTimeout(() => {
+              this.completionModal.classList.add('hidden');
+              this.btnClaimRewards.disabled = false;
+              this.pendingRewardPayload = null;
+              if (isLevelComplete) {
+                this.openSagaMap();
+              } else {
+                this.syncMovementLock();
+              }
+            }, 260);
+          }
+        }, 620);
+      }, i * 75);
+    }
+  }
+
+  // --- SMOOTH ANALOG JOYSTICK + DRAGGABLE MOBILE BUTTONS ---
+  bindAnalogJoystickAndDraggableUI() {
+    const joyZone = document.getElementById('joystick-zone');
+    const joyStick = document.getElementById('joystick-stick');
+    const dragToggleBtn = document.getElementById('btn-toggle-layout-drag');
+
+    // Toggle Layout Edit Mode so user can drag Joystick & Action Button anywhere
+    dragToggleBtn.addEventListener('click', () => {
+      this.layoutEditMode = !this.layoutEditMode;
+      dragToggleBtn.textContent = this.layoutEditMode
+        ? '✅ Done Moving Controls'
+        : '✋ Move Controls: OFF';
+      dragToggleBtn.classList.toggle('editing', this.layoutEditMode);
+      joyZone.classList.toggle('draggable-editing', this.layoutEditMode);
+      this.mobileActionBtn.classList.toggle('draggable-editing', this.layoutEditMode);
+      if (this.layoutEditMode) {
+        this.showToast('Drag the Joystick or Action button anywhere on screen!');
+      }
+    });
+
+    // Helper to make an element repositionable when layoutEditMode is ON
+    const makeRepositionable = (el) => {
+      let draggingEl = false;
+      let offsetX = 0;
+      let offsetY = 0;
+
+      el.addEventListener('pointerdown', (e) => {
+        if (!this.layoutEditMode) return;
+        e.preventDefault();
+        e.stopPropagation();
+        draggingEl = true;
+        const rect = el.getBoundingClientRect();
+        offsetX = e.clientX - rect.left;
+        offsetY = e.clientY - rect.top;
+        el.setPointerCapture(e.pointerId);
+      });
+
+      el.addEventListener('pointermove', (e) => {
+        if (!draggingEl || !this.layoutEditMode) return;
+        const x = Math.min(Math.max(8, e.clientX - offsetX), window.innerWidth - el.offsetWidth - 8);
+        const y = Math.min(Math.max(60, e.clientY - offsetY), window.innerHeight - el.offsetHeight - 8);
+        el.style.left = `${x}px`;
+        el.style.top = `${y}px`;
+        el.style.right = 'auto';
+        el.style.bottom = 'auto';
+      });
+
+      el.addEventListener('pointerup', () => {
+        draggingEl = false;
+      });
+    };
+
+    makeRepositionable(joyZone);
+    makeRepositionable(this.mobileActionBtn);
+
+    // Analog Thumbstick Drag Logic (when not in layoutEditMode)
+    let stickActive = false;
+    let centerX = 0;
+    let centerY = 0;
+    const maxRadius = 36;
+
+    const updateStick = (clientX, clientY) => {
+      let dx = clientX - centerX;
+      let dy = clientY - centerY;
+      const dist = Math.hypot(dx, dy);
+
+      if (dist > maxRadius) {
+        dx = (dx / dist) * maxRadius;
+        dy = (dy / dist) * maxRadius;
+      }
+
+      joyStick.style.transform = `translate(${dx}px, ${dy}px)`;
+      eventBus.emit('mobile:joystick', {
+        vx: dx / maxRadius,
+        vy: dy / maxRadius
+      });
+    };
+
+    const resetStick = () => {
+      stickActive = false;
+      joyStick.style.transform = 'translate(0px, 0px)';
+      eventBus.emit('mobile:joystick', { vx: 0, vy: 0 });
+    };
+
+    joyZone.addEventListener('pointerdown', (e) => {
+      if (this.layoutEditMode) return;
+      e.preventDefault();
+      stickActive = true;
+      const rect = joyZone.getBoundingClientRect();
+      centerX = rect.left + rect.width / 2;
+      centerY = rect.top + rect.height / 2;
+      joyZone.setPointerCapture(e.pointerId);
+      updateStick(e.clientX, e.clientY);
+    });
+
+    joyZone.addEventListener('pointermove', (e) => {
+      if (!stickActive || this.layoutEditMode) return;
+      updateStick(e.clientX, e.clientY);
+    });
+
+    joyZone.addEventListener('pointerup', resetStick);
+    joyZone.addEventListener('pointercancel', resetStick);
+
+    // Action Button Tap
+    this.mobileActionBtn.addEventListener('pointerdown', (e) => {
+      if (this.layoutEditMode) return;
+      e.preventDefault();
+      eventBus.emit('ui:interact');
+    });
+  }
+
   bindTutorialControls() {
     this.tutorialSteps = [
       {
         targetId: 'hud-left-stats',
         arrow: '⬆',
-        title: '1. Kindness Score & Level Progress',
-        desc: 'Every time you help a neighbor or clean up the village, your Kindness Score and Level Progress grow here!'
+        title: '1. Kindness Score & Level',
+        desc: 'Track your Kindness Points (💛) and Level Progress right here.'
       },
       {
         targetId: 'hud-goal-box',
         arrow: '⬆',
-        title: '2. Current Goal Banner',
-        desc: 'Never get lost! This banner always tells you your next active task in the village.'
+        title: '2. Compact Goal Pill',
+        desc: 'This sleek bar always shows your current objective.'
       },
       {
         targetId: 'hud-right-buttons',
         arrow: '⬆',
-        title: '3. Level Map & Quest Journal',
-        desc: 'Click "Quests (J)" to locate any neighbor on the map, or "Levels (M)" to switch between Saga Levels.'
+        title: '3. Levels, Quests & Settings (⚙️)',
+        desc: 'Open the Level Map (🗺️), Quest Journal (📖), or Audio Settings (⚙️) anytime.'
       },
       {
         targetId: 'hud-inventory',
         arrow: '⬇',
-        title: '4. Your Backpack & Guiding Arrow',
-        desc: 'Collected items appear here. Now follow the golden arrow (➤) around your character to meet Grandma Evelyn!'
+        title: '4. Action Keys (T, G, P, F)',
+        desc: 'Press [T] to Talk, [G] to Grab items, [P] to Plant, and [F] to Fix taps! Follow the golden arrow (➤) to Grandma Evelyn!'
       }
     ];
 
@@ -209,13 +384,13 @@ export class UIManager {
       const rect = targetEl.getBoundingClientRect();
 
       if (step.arrow === '⬆') {
-        const leftPos = Math.min(Math.max(rect.left + rect.width / 2 - 165, 16), window.innerWidth - 346);
-        this.tutorialPointer.style.top = `${rect.bottom + 12}px`;
+        const leftPos = Math.min(Math.max(rect.left + rect.width / 2 - 155, 12), window.innerWidth - 322);
+        this.tutorialPointer.style.top = `${rect.bottom + 10}px`;
         this.tutorialPointer.style.left = `${leftPos}px`;
         this.tutorialPointer.style.flexDirection = 'column';
       } else {
-        const leftPos = Math.min(Math.max(rect.left, 16), window.innerWidth - 346);
-        this.tutorialPointer.style.top = `${Math.max(rect.top - 220, 80)}px`;
+        const leftPos = Math.min(Math.max(rect.left, 12), window.innerWidth - 322);
+        this.tutorialPointer.style.top = `${Math.max(rect.top - 210, 70)}px`;
         this.tutorialPointer.style.left = `${leftPos}px`;
         this.tutorialPointer.style.flexDirection = 'column-reverse';
       }
@@ -230,7 +405,6 @@ export class UIManager {
     eventBus.emit('quest:locate', { x: 350, y: 355, label: "Grandma Evelyn's Cottage" });
   }
 
-  // --- CANDY CRUSH WINDING SAGA MAP ---
   openSagaMap() {
     this.renderSagaMap();
     this.sagaMapModal.classList.remove('hidden');
@@ -245,7 +419,6 @@ export class UIManager {
     this.sagaNodesContainer.innerHTML = LEVELS_META.map((meta, index) => {
       const sideClass = index % 2 === 0 ? 'left' : 'right';
 
-      // Coming Soon Levels (Level 4, Level 5, etc.)
       if (!meta.playable) {
         return `
           <div class="map-node-row ${sideClass}">
@@ -287,7 +460,7 @@ export class UIManager {
                 <span class="saga-stars">${starsHtml} <small>(${stats.completedCount}/${stats.totalQuests})</small></span>
                 ${
                   isUnlocked
-                    ? `<button class="ui-btn ${isCurrent ? 'btn-gold' : ''} btn-select-level" data-level="${meta.level}">
+                    ? `<button class="ui-btn ${isCurrent ? 'btn-gold' : ''} btn-small btn-select-level" data-level="${meta.level}">
                         ${isCompleted ? '↺ Replay' : '▶ Play Level ' + meta.level}
                       </button>`
                     : `<span class="quest-status-tag">Locked</span>`
@@ -307,7 +480,6 @@ export class UIManager {
         this.sagaMapModal.classList.add('hidden');
         this.startGameplay();
 
-        // Trigger the Arrow Tutorial the very first time Level 1 is clicked!
         if (lvl === 1 && !gameState.tutorialSeen) {
           setTimeout(() => this.startTutorial(), 250);
         } else {
@@ -380,12 +552,19 @@ export class UIManager {
       }
     });
 
-    eventBus.on('interaction:available', (promptText) => {
-      if (promptText && !this.isAnyModalOpen()) {
-        this.promptTextEl.textContent = promptText;
+    eventBus.on('interaction:available', (targetInfo) => {
+      if (targetInfo && !this.isAnyModalOpen()) {
+        this.promptKeyBadgeEl.textContent = targetInfo.key;
+        this.promptTextEl.textContent = targetInfo.prompt;
         this.promptEl.classList.remove('hidden');
+
+        // Also update the mobile action button with the exact icon & key!
+        this.mobileActionIcon.textContent = targetInfo.icon;
+        this.mobileActionKey.textContent = `[${targetInfo.key}]`;
       } else {
         this.promptEl.classList.add('hidden');
+        this.mobileActionIcon.textContent = '✋';
+        this.mobileActionKey.textContent = 'ACT';
       }
     });
 
@@ -412,31 +591,6 @@ export class UIManager {
     eventBus.on('quest:completed', (payload) => this.showCompletionModal(payload));
   }
 
-  bindMobileControls() {
-    const dpadBtns = document.querySelectorAll('.dpad-btn');
-    dpadBtns.forEach((btn) => {
-      const dir = btn.dataset.dir;
-      const start = (e) => {
-        e.preventDefault();
-        eventBus.emit('mobile:dir', { dir, pressed: true });
-      };
-      const end = (e) => {
-        e.preventDefault();
-        eventBus.emit('mobile:dir', { dir, pressed: false });
-      };
-      btn.addEventListener('pointerdown', start);
-      btn.addEventListener('pointerup', end);
-      btn.addEventListener('pointerleave', end);
-      btn.addEventListener('pointercancel', end);
-    });
-
-    const actionBtn = document.getElementById('mobile-action-btn');
-    actionBtn.addEventListener('pointerdown', (e) => {
-      e.preventDefault();
-      eventBus.emit('ui:interact');
-    });
-  }
-
   isAnyModalOpen() {
     return (
       this.inMainMenu ||
@@ -460,8 +614,8 @@ export class UIManager {
   renderHUD(state) {
     this.scoreEl.textContent = state.kindnessScore;
     this.levelIconEl.textContent = state.levelMeta.themeIcon;
-    this.levelTitleEl.textContent = `Level ${state.currentLevel}`;
-    this.progressEl.textContent = `${state.progress.completedCount}/${state.progress.totalQuests} (${state.progress.percent}%)`;
+    this.levelTitleEl.textContent = `Lv.${state.currentLevel}`;
+    this.progressEl.textContent = `${state.progress.completedCount}/${state.progress.totalQuests}`;
     this.objectiveEl.textContent = state.objectiveText;
 
     const entries = Object.entries(state.inventory);
@@ -492,11 +646,11 @@ export class UIManager {
 
   renderJournal(state) {
     const { completedCount, totalQuests, percent } = state.progress;
-    this.journalHeadingEl.textContent = `📖 ${state.levelMeta.title} — Quest Journal`;
-    this.journalSubtitleEl.textContent = `${completedCount} of ${totalQuests} Level Quests Completed (${percent}%) • Theme: ${state.levelMeta.subtitle}`;
+    this.journalHeadingEl.textContent = `📖 ${state.levelMeta.title}`;
+    this.journalSubtitleEl.textContent = `${completedCount} of ${totalQuests} Quests Completed (${percent}%)`;
 
     if (state.badges.length === 0) {
-      this.journalBadgesEl.innerHTML = '<span class="inv-empty">Complete quests to earn Friendship & Civic Badges!</span>';
+      this.journalBadgesEl.innerHTML = '<span class="inv-empty">Complete tasks to earn badges!</span>';
     } else {
       this.journalBadgesEl.innerHTML = state.badges
         .map((b) => `<span class="badge-pill">${b}</span>`)
@@ -506,8 +660,8 @@ export class UIManager {
     const statusLabels = {
       not_started: 'Available',
       active: 'In Progress',
-      ready_to_turn_in: 'Ready to Turn In',
-      completed: 'Completed ✓'
+      ready_to_turn_in: 'Turn In',
+      completed: 'Done ✓'
     };
 
     const levelQuests = gameState.getQuestsForLevel(state.currentLevel);
@@ -518,7 +672,7 @@ export class UIManager {
         return `
           <div class="quest-row ${st}">
             <div class="quest-row-top">
-              <span class="quest-title">${q.title} — <small>${q.locationHint}</small></span>
+              <span class="quest-title">${q.title}</span>
               <span class="quest-status-tag ${st}">${statusLabels[st]} (+${q.rewardPoints} 💛)</span>
             </div>
             <p class="quest-desc">${q.description}</p>
@@ -579,27 +733,25 @@ export class UIManager {
     this.syncMovementLock();
   }
 
-  showCompletionModal({ quest, totalEarned, isLevelComplete, completedLevelNumber }) {
+  showCompletionModal(payload) {
+    const { quest, totalEarned, isLevelComplete, completedLevelNumber } = payload;
+    this.pendingRewardPayload = payload;
+
+    const levelMeta = LEVELS_META.find((l) => l.level === completedLevelNumber) || LEVELS_META[0];
+
     document.getElementById('completion-icon').textContent = isLevelComplete ? '🏆⭐⭐⭐' : '🌟';
     document.getElementById('completion-title').textContent = isLevelComplete
-      ? `Level ${completedLevelNumber} Complete (3 Stars)!`
-      : 'Quest Completed!';
+      ? `Level ${completedLevelNumber} Complete!`
+      : 'Task Completed!';
     document.getElementById('completion-quest-name').textContent = quest.title;
-    document.getElementById('completion-points').textContent = `+${totalEarned} Kindness Points Earned 💛`;
-    document.getElementById('completion-badge').textContent = `Unlocked: ${quest.rewardBadge}`;
+    document.getElementById('completion-points').textContent = `Reward: +${totalEarned} Kindness Points 💛`;
+    document.getElementById('completion-badge').textContent = `Badge: ${quest.rewardBadge}`;
+    document.getElementById('completion-impact').textContent = quest.worldImpact;
+    document.getElementById('completion-realworld-text').textContent = levelMeta.realWorldFact;
 
-    if (isLevelComplete && completedLevelNumber < 3) {
-      document.getElementById('completion-impact').textContent =
-        `${quest.worldImpact} 🎉 You earned ⭐⭐⭐ on Level ${completedLevelNumber} and unlocked Level ${completedLevelNumber + 1} on the Kindness Map!`;
-      this.btnNextLevelMap.classList.remove('hidden');
-    } else if (isLevelComplete && completedLevelNumber === 3) {
-      document.getElementById('completion-impact').textContent =
-        `${quest.worldImpact} 🏆 Congratulations! You have completed all 3 Playable Levels of Kindness Quest!`;
-      this.btnNextLevelMap.classList.remove('hidden');
-    } else {
-      document.getElementById('completion-impact').textContent = quest.worldImpact;
-      this.btnNextLevelMap.classList.add('hidden');
-    }
+    this.btnClaimRewards.textContent = isLevelComplete
+      ? `🎁 Claim +${totalEarned} 💛 & Unlock Next Level!`
+      : `🎁 Claim +${totalEarned} 💛 Rewards!`;
 
     this.completionModal.classList.remove('hidden');
     this.syncMovementLock();

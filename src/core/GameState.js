@@ -181,13 +181,18 @@ class GameState {
     eventBus.emit('toast', `✨ +${points} Kindness (${reasonText})!`);
   }
 
+  addClaimedPoints(amount) {
+    this.kindnessScore += amount;
+    this.save();
+    this.emitStateChange();
+  }
+
   completeQuest(questId, bonusPoints = 0) {
     if (this.getQuestStatus(questId) === 'completed') return;
     const quest = QUESTS_DATA[questId];
     this.quests[questId] = 'completed';
 
     const totalEarned = quest.rewardPoints + bonusPoints;
-    this.kindnessScore += totalEarned;
 
     if (quest.rewardBadge && !this.badges.includes(quest.rewardBadge)) {
       this.badges.push(quest.rewardBadge);

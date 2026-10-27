@@ -90,12 +90,19 @@ export class VillageScene extends Phaser.Scene {
     this.cameras.main.setBounds(0, 0, worldWidth, worldHeight);
     this.cameras.main.startFollow(this.player, true, 0.1, 0.1);
 
-    this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.E).on('down', () => this.triggerInteraction());
+    // Context-sensitive action keys (T, G, P, F, R + E fallback)
+    const actionKeyCodes = ['T', 'G', 'P', 'F', 'R', 'E'];
+    actionKeyCodes.forEach((code) => {
+      this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes[code]).on('down', () => {
+        this.triggerInteraction(code);
+      });
+    });
+
     this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.J).on('down', () => eventBus.emit('ui:toggle-journal'));
     this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.M).on('down', () => eventBus.emit('ui:toggle-map'));
     this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ESC).on('down', () => eventBus.emit('ui:toggle-pause'));
 
-    eventBus.on('ui:interact', () => this.triggerInteraction());
+    eventBus.on('ui:interact', () => this.triggerInteraction(null));
     eventBus.on('ui:movement-lock', (isLocked) => {
       if (this.player) this.player.movementLocked = isLocked;
     });
@@ -114,8 +121,8 @@ export class VillageScene extends Phaser.Scene {
     eventBus.on('quest:completed', () => {
       if (this.player) this.spawnCelebrationBurst(this.player.x, this.player.y - 20);
     });
-    eventBus.on('mobile:dir', ({ dir, pressed }) => {
-      if (this.player) this.player.setTouchDirection(dir, pressed);
+    eventBus.on('mobile:joystick', ({ vx, vy }) => {
+      if (this.player) this.player.setJoystickVector(vx, vy);
     });
     eventBus.on('state:updated', () => this.syncWorldWithState());
 
@@ -145,6 +152,8 @@ export class VillageScene extends Phaser.Scene {
 
     this.interactables.push({
       id: 'prop_notice_board',
+      key: 'R',
+      icon: '📋',
       x: 665,
       y: 585,
       radius: 68,
@@ -223,6 +232,8 @@ export class VillageScene extends Phaser.Scene {
     this.grocerySprite = this.createFloatingItem(1245, 365, 'item_groceries');
     this.interactables.push({
       id: 'item_grocery_package',
+      key: 'G',
+      icon: '✋',
       x: 1245,
       y: 365,
       radius: 65,
@@ -242,6 +253,8 @@ export class VillageScene extends Phaser.Scene {
     this.bookSprite = this.createFloatingItem(255, 905, 'item_books');
     this.interactables.push({
       id: 'item_book_stack',
+      key: 'G',
+      icon: '✋',
       x: 255,
       y: 905,
       radius: 65,
@@ -261,6 +274,8 @@ export class VillageScene extends Phaser.Scene {
     this.seedSprite = this.createFloatingItem(615, 860, 'item_seeds');
     this.interactables.push({
       id: 'item_seed_bag',
+      key: 'G',
+      icon: '✋',
       x: 615,
       y: 860,
       radius: 60,
@@ -278,6 +293,8 @@ export class VillageScene extends Phaser.Scene {
     this.wateringCanSprite = this.createFloatingItem(945, 860, 'item_watering_can');
     this.interactables.push({
       id: 'item_watering_can',
+      key: 'G',
+      icon: '✋',
       x: 945,
       y: 860,
       radius: 60,
@@ -299,6 +316,8 @@ export class VillageScene extends Phaser.Scene {
 
       this.interactables.push({
         id: `garden_plot_${idx}`,
+        key: 'P',
+        icon: '🌱',
         x: px,
         y: py,
         radius: 55,
@@ -322,6 +341,8 @@ export class VillageScene extends Phaser.Scene {
     this.produceSprite = this.createFloatingItem(680, 960, 'item_produce');
     this.interactables.push({
       id: 'item_produce_crate',
+      key: 'G',
+      icon: '✋',
       x: 680,
       y: 960,
       radius: 65,
@@ -340,6 +361,8 @@ export class VillageScene extends Phaser.Scene {
     this.loavesSprite = this.createFloatingItem(1085, 365, 'item_loaves');
     this.interactables.push({
       id: 'item_bakery_loaves',
+      key: 'G',
+      icon: '✋',
       x: 1085,
       y: 365,
       radius: 65,
@@ -358,6 +381,8 @@ export class VillageScene extends Phaser.Scene {
     this.medicineSprite = this.createFloatingItem(1250, 910, 'item_medicine');
     this.interactables.push({
       id: 'item_clinic_supplies',
+      key: 'G',
+      icon: '✋',
       x: 1250,
       y: 910,
       radius: 65,
@@ -377,6 +402,8 @@ export class VillageScene extends Phaser.Scene {
     this.broomSprite = this.createFloatingItem(640, 960, 'item_broom');
     this.interactables.push({
       id: 'item_bamboo_broom',
+      key: 'G',
+      icon: '✋',
       x: 640,
       y: 960,
       radius: 65,
@@ -403,6 +430,8 @@ export class VillageScene extends Phaser.Scene {
     this.recyclablesSprite = this.createFloatingItem(1350, 470, 'item_recyclables');
     this.interactables.push({
       id: 'item_recyclable_bundle',
+      key: 'G',
+      icon: '✋',
       x: 1350,
       y: 470,
       radius: 65,
@@ -426,6 +455,8 @@ export class VillageScene extends Phaser.Scene {
       const sprite = this.add.sprite(wx, wy, 'prop_tap_leaking').setDepth(wy).setVisible(false);
       this.interactables.push({
         id: `leaking_tap_${idx}`,
+        key: 'F',
+        icon: '🔧',
         x: wx,
         y: wy,
         radius: 60,
@@ -447,6 +478,8 @@ export class VillageScene extends Phaser.Scene {
     this.teaSprite = this.createFloatingItem(850, 315, 'item_tea');
     this.interactables.push({
       id: 'item_chamomile_tea',
+      key: 'G',
+      icon: '✋',
       x: 850,
       y: 315,
       radius: 65,
@@ -465,6 +498,8 @@ export class VillageScene extends Phaser.Scene {
     this.watchSprite = this.createFloatingItem(430, 895, 'item_watch');
     this.interactables.push({
       id: 'item_vintage_watch',
+      key: 'G',
+      icon: '✋',
       x: 430,
       y: 895,
       radius: 65,
@@ -484,6 +519,8 @@ export class VillageScene extends Phaser.Scene {
     this.welcomeCardSprite = this.createFloatingItem(715, 315, 'item_welcome_card');
     this.interactables.push({
       id: 'item_welcome_card',
+      key: 'G',
+      icon: '✋',
       x: 715,
       y: 315,
       radius: 65,
@@ -534,6 +571,8 @@ export class VillageScene extends Phaser.Scene {
 
     this.interactables.push({
       id,
+      key: 'T',
+      icon: '💬',
       x,
       y,
       radius: 72,
@@ -1500,8 +1539,16 @@ export class VillageScene extends Phaser.Scene {
     return sprite;
   }
 
-  triggerInteraction() {
+  triggerInteraction(pressedKey = null) {
     if (this.player.movementLocked || !this.activeTarget) return;
+    const requiredKey = this.activeTarget.key || 'G';
+
+    // Allow exact key, UI button click (null), or 'E' universal accessibility fallback
+    if (pressedKey && pressedKey !== requiredKey && pressedKey !== 'E') {
+      eventBus.emit('toast', `Press [${requiredKey}] to ${this.activeTarget.prompt}!`);
+      return;
+    }
+
     eventBus.emit('sfx:click');
     this.activeTarget.onInteract();
   }
@@ -1542,7 +1589,16 @@ export class VillageScene extends Phaser.Scene {
 
     if (closest !== this.activeTarget) {
       this.activeTarget = closest;
-      eventBus.emit('interaction:available', closest ? closest.prompt : null);
+      eventBus.emit(
+        'interaction:available',
+        closest
+          ? {
+              prompt: closest.prompt,
+              key: closest.key || 'G',
+              icon: closest.icon || '✋'
+            }
+          : null
+      );
     }
 
     // Update In-World Directional Guide Arrow
