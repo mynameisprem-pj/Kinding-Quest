@@ -173,22 +173,22 @@ export const QUESTS_DATA = {
     id: 'quest_neighbors',
     level: 1,
     title: '6. Bring the Neighbors Together',
-    giver: 'Sam & Elena',
+    giver: 'Community Notice Board',
     locationHint: 'Havenwood Square (Center)',
     rewardPoints: 50,
     rewardBadge: '🤝 Peacemaker Medallion',
-    worldImpact: 'Havenwood Square has been transformed into a welcoming cultural hub for music and art!',
+    worldImpact: 'Havenwood Square has been transformed into a welcoming cultural hub for the whole village!',
     coords: {
-      not_started: { x: 780, y: 495, label: 'Sam & Elena (Havenwood Square)' },
-      active: { x: 780, y: 495, label: 'Sam & Elena (Havenwood Square)' },
-      ready_to_turn_in: { x: 780, y: 495, label: 'Sam & Elena (Havenwood Square)' },
+      not_started: { x: 665, y: 585, label: 'Havenwood Notice Board (Center)' },
+      active: { x: 665, y: 585, label: 'Havenwood Notice Board (Center)' },
+      ready_to_turn_in: { x: 665, y: 585, label: 'Havenwood Notice Board (Center)' },
       completed: { x: 780, y: 520, label: 'Havenwood Cultural Plaza' }
     },
-    description: 'Musician Sam and Painter Elena disagree on how to use the empty central plaza. Listen to both and facilitate a solution.',
+    description: 'Residents posted competing proposals on the Notice Board for how to use the empty central plaza. Choose a unifying design for the square.',
     objectives: {
-      not_started: 'Speak with Musician Sam or Painter Elena in Havenwood Square (Center).',
-      active: 'Listen to both Sam and Elena to understand their perspectives, then propose a solution.',
-      ready_to_turn_in: 'Speak with Sam or Elena in the Square to choose a plan for the shared space.',
+      not_started: 'Read the Havenwood Notice Board [R] in the center square to review the plaza proposals.',
+      active: 'Select a community design on the Havenwood Notice Board [R].',
+      ready_to_turn_in: 'Select a community design on the Havenwood Notice Board [R].',
       completed: 'Harmony restored! Havenwood Square now celebrates everyone in the community.'
     }
   },
@@ -327,14 +327,14 @@ export const QUESTS_DATA = {
     coords: {
       not_started: { x: 350, y: 915, label: 'Student Maya (Southwest)' },
       active: { x: 780, y: 365, label: 'Welcome Banner at Community Center' },
-      ready_to_turn_in: { x: 780, y: 555, label: 'Havenwood Square Circle' },
+      ready_to_turn_in: { x: 665, y: 585, label: 'Havenwood Notice Board (Square)' },
       completed: { x: 780, y: 520, label: 'Havenwood Golden Lantern Festival' }
     },
-    description: 'A shy new student is nervous about joining the village activities. Pick up the Signed Welcome Banner and host a welcoming circle in Havenwood Square!',
+    description: 'A shy new student is nervous about joining the village activities. Pick up the Signed Welcome Banner and hang it at the Havenwood Square Notice Board!',
     objectives: {
       not_started: 'Talk to Student Maya by the Library about welcoming the new student.',
       active: 'Pick up the Signed Welcome Banner outside the Community Center (North).',
-      ready_to_turn_in: 'Bring the Welcome Banner to Sam & Elena in Havenwood Square to start the Welcome Circle!',
+      ready_to_turn_in: 'Bring the Welcome Banner to the Notice Board [R] in Havenwood Square!',
       completed: 'Everyone is included! Havenwood is glowing with golden festival lanterns!'
     }
   }

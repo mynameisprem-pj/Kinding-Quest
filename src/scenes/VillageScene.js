@@ -159,13 +159,28 @@ export class VillageScene extends Phaser.Scene {
       radius: 68,
       prompt: 'Read Havenwood Notice Board',
       onInteract: () => {
+        // Level 3 Task 3 Turn-In: Hang Welcome Banner in the Square
+        if (gameState.currentLevel === 3 && gameState.getQuestStatus('quest_include_newcomer') === 'ready_to_turn_in') {
+          this.presentLevel3WelcomeCircle();
+          return;
+        }
+
+        // Level 1 Task 6: Choose the Community Square Layout
+        if (gameState.currentLevel === 1 && gameState.getQuestStatus('quest_neighbors') !== 'completed') {
+          if (gameState.getQuestStatus('quest_neighbors') === 'not_started') {
+            gameState.startQuest('quest_neighbors');
+          }
+          this.presentNeighborResolution();
+          return;
+        }
+
         const meta = LEVELS_META.find((l) => l.level === gameState.currentLevel);
         eventBus.emit('dialogue:show', {
           speaker: `Havenwood Notice Board (${meta.title})`,
           role: meta.subtitle,
-          text: `${meta.description} Walk up to any villager with a golden [!] overhead and press E, or open the Saga Level Map (M) to switch levels!`,
+          text: `${meta.description} Walk up to any villager with a golden [!] overhead and press T, or open the Level Map (M) to switch levels!`,
           choices: [
-            { label: '🗺️ Open Level Saga Map (M)', onSelect: () => eventBus.emit('ui:toggle-map') },
+            { label: '🗺️ Open Level Map (M)', onSelect: () => eventBus.emit('ui:toggle-map') },
             { label: '📖 Open Quest Journal (J)', onSelect: () => eventBus.emit('ui:toggle-journal') },
             { label: 'Close', onSelect: () => {} }
           ]
@@ -545,8 +560,6 @@ export class VillageScene extends Phaser.Scene {
     this.spawnVillager('npc_chef', 780, 310, 'char_chef', 'Talk to Chef Marco', () => this.talkMarco());
     this.spawnVillager('npc_nurse', 1150, 915, 'char_nurse', 'Talk to Nurse Clara', () => this.talkClara());
     this.spawnVillager('npc_henderson', 1365, 555, 'char_elder_man', 'Talk to Mr. Henderson', () => this.talkHenderson());
-    this.spawnVillager('npc_sam', 715, 495, 'char_musician', 'Talk to Musician Sam', () => this.talkSam());
-    this.spawnVillager('npc_elena', 845, 495, 'char_painter', 'Talk to Painter Elena', () => this.talkElena());
   }
 
   spawnVillager(id, x, y, texture, prompt, handler) {
@@ -651,8 +664,7 @@ export class VillageScene extends Phaser.Scene {
         npc_student: 'quest_books',
         npc_gardener: 'quest_garden',
         npc_chef: 'quest_food',
-        npc_nurse: 'quest_medicine',
-        npc_sam: 'quest_neighbors'
+        npc_nurse: 'quest_medicine'
       },
       2: {
         npc_gardener: 'quest_sweep_village',
@@ -1274,97 +1286,11 @@ export class VillageScene extends Phaser.Scene {
     }
   }
 
-  talkSam() {
-    if (gameState.currentLevel === 3 && gameState.getQuestStatus('quest_include_newcomer') === 'ready_to_turn_in') {
-      this.presentLevel3WelcomeCircle();
-      return;
-    }
-
-    const status = gameState.getQuestStatus('quest_neighbors');
-    if (status === 'not_started' && gameState.currentLevel === 1) {
-      eventBus.emit('dialogue:show', {
-        speaker: 'Musician Sam',
-        role: 'Street Guitarist',
-        text: 'Elena and I both love Havenwood Square, but we disagree on how to use the plaza! Can you talk to Elena too and help us figure this out?',
-        choices: [
-          {
-            label: "I'll listen to both of you! (Accept Quest)",
-            onSelect: () => {
-              eventBus.emit('sfx:quest-start');
-              gameState.startQuest('quest_neighbors');
-              gameState.recordNeighborTalk('sam');
-            }
-          }
-        ]
-      });
-    } else if (status === 'active' && gameState.currentLevel === 1) {
-      gameState.recordNeighborTalk('sam');
-      eventBus.emit('dialogue:show', {
-        speaker: 'Musician Sam',
-        role: 'Street Guitarist',
-        text: "I don't want my music to bother Elena's painting class—I just want people to feel welcome in the square. Make sure you hear Elena's side too!",
-        choices: [{ label: "I'll talk to Elena now.", onSelect: () => {} }]
-      });
-    } else if (status === 'ready_to_turn_in' && gameState.currentLevel === 1) {
-      this.presentNeighborResolution();
-    } else {
-      eventBus.emit('dialogue:show', {
-        speaker: 'Musician Sam',
-        role: 'Street Guitarist (Happy)',
-        text: 'Music sounds even better when the whole village is in harmony!',
-        choices: [{ label: 'Play on, Sam!', onSelect: () => {} }]
-      });
-    }
-  }
-
-  talkElena() {
-    if (gameState.currentLevel === 3 && gameState.getQuestStatus('quest_include_newcomer') === 'ready_to_turn_in') {
-      this.presentLevel3WelcomeCircle();
-      return;
-    }
-
-    const status = gameState.getQuestStatus('quest_neighbors');
-    if (status === 'not_started' && gameState.currentLevel === 1) {
-      eventBus.emit('dialogue:show', {
-        speaker: 'Painter Elena',
-        role: 'Community Artist',
-        text: 'Sam is a wonderful musician, but we both want to use Havenwood Square at the same time! Could you speak with both of us and help us find a fair solution?',
-        choices: [
-          {
-            label: "I'd love to help mediate! (Accept Quest)",
-            onSelect: () => {
-              eventBus.emit('sfx:quest-start');
-              gameState.startQuest('quest_neighbors');
-              gameState.recordNeighborTalk('elena');
-            }
-          }
-        ]
-      });
-    } else if (status === 'active' && gameState.currentLevel === 1) {
-      gameState.recordNeighborTalk('elena');
-      eventBus.emit('dialogue:show', {
-        speaker: 'Painter Elena',
-        role: 'Community Artist',
-        text: "I actually enjoy Sam's acoustic melodies! I just need space for easels and a schedule that works for everyone.",
-        choices: [{ label: "Let's find a solution!", onSelect: () => {} }]
-      });
-    } else if (status === 'ready_to_turn_in' && gameState.currentLevel === 1) {
-      this.presentNeighborResolution();
-    } else {
-      eventBus.emit('dialogue:show', {
-        speaker: 'Painter Elena',
-        role: 'Community Artist (Happy)',
-        text: 'Painting while listening to gentle live music has made the square everyone’s favorite spot!',
-        choices: [{ label: 'Beautiful artwork!', onSelect: () => {} }]
-      });
-    }
-  }
-
   presentLevel3WelcomeCircle() {
     eventBus.emit('dialogue:show', {
-      speaker: 'Sam, Elena & Newcomer Toby',
-      role: 'Havenwood Welcome Circle',
-      text: 'You brought the Signed Welcome Banner! Toby is smiling from ear to ear. Let’s light the Golden Festival Lanterns across Havenwood Square to celebrate everyone belonging!',
+      speaker: 'Havenwood Square Welcome Circle',
+      role: 'Community Celebration',
+      text: 'You brought the Signed Welcome Banner to Havenwood Square! Toby is smiling from ear to ear. Let’s light the Golden Festival Lanterns across the square to celebrate everyone belonging!',
       choices: [
         {
           label: '🏮 Hang Welcome Banner & Light Festival Lanterns (+60 Kindness 💛)',
@@ -1379,26 +1305,26 @@ export class VillageScene extends Phaser.Scene {
 
   presentNeighborResolution() {
     eventBus.emit('dialogue:show', {
-      speaker: 'Sam & Elena',
-      role: 'Village Square Neighbors',
-      text: "You've listened to both of our needs. How do you think we should set up Havenwood Square?",
+      speaker: 'Havenwood Community Vote',
+      role: 'Village Square Proposal',
+      text: 'Neighbors submitted ideas on the Notice Board for how to upgrade Havenwood Square. Which community project should we build for the village?',
       choices: [
         {
-          label: '🤝 Build a Shared Harmony Pavilion (Acoustic Music + Art Easels) [+60 Kindness]',
+          label: '🤝 Build a Shared Harmony Pavilion (Music & Art Space) [+60 Kindness]',
           onSelect: () => {
             gameState.worldFlags.plazaResolution = 'harmony_pavilion';
             gameState.completeQuest('quest_neighbors', 10);
           }
         },
         {
-          label: '🎵 Prioritize an Acoustic Music Stage with Morning Art Hours [+50 Kindness]',
+          label: '🎵 Build an Acoustic Community Stage [+50 Kindness]',
           onSelect: () => {
             gameState.worldFlags.plazaResolution = 'music_stage';
             gameState.completeQuest('quest_neighbors', 0);
           }
         },
         {
-          label: '🖼️ Prioritize an Open-Air Art Walk with Weekend Concerts [+50 Kindness]',
+          label: '🖼️ Build an Open-Air Village Art Walk [+50 Kindness]',
           onSelect: () => {
             gameState.worldFlags.plazaResolution = 'art_gallery';
             gameState.completeQuest('quest_neighbors', 0);
