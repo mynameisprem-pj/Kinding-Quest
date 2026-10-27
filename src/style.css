@@ -844,32 +844,70 @@ body, html {
   display: none !important;
 }
 
-/* Mobile Responsive Tweaks */
+/* Mobile Responsive Tweaks — Prevents Top Icons from Hiding/Clipping */
 @media (max-width: 820px), (pointer: coarse) {
-  .mobile-controls {
-    display: block;
+  #ui-layer {
+    padding: 8px;
   }
+
+  .hud-bar-main {
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 6px;
+  }
+
+  .hud-left-group, .hud-actions {
+    gap: 5px;
+  }
+
+  .stat-badge {
+    padding: 4px 9px;
+    gap: 4px;
+  }
+
+  .badge-icon {
+    font-size: 1rem;
+  }
+
+  .badge-value {
+    font-size: 0.92rem;
+  }
+
+  .badge-level-tag {
+    font-size: 0.68rem;
+  }
+
   .btn-text-desktop {
     display: none;
   }
-  .btn-hud {
-    width: 40px;
-    height: 40px;
+
+  .btn-hud, .btn-icon-only {
+    width: 36px;
+    height: 36px;
     padding: 0;
-    border-radius: 12px;
-    font-size: 1.15rem;
+    border-radius: 10px;
+    font-size: 1.05rem;
+    flex-shrink: 0;
   }
+
+  .objective-pill {
+    font-size: 0.76rem;
+    padding: 4px 12px;
+    max-width: 96vw;
+  }
+
+  .mobile-controls {
+    display: block;
+  }
+
   .inventory-bar {
     margin-bottom: 148px;
     padding: 4px 10px;
   }
+
   .interaction-prompt {
     bottom: 148px;
     font-size: 0.84rem;
     padding: 6px 14px;
-  }
-  .objective-pill {
-    font-size: 0.78rem;
-    padding: 5px 12px;
   }
 }
