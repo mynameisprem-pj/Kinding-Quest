@@ -1,3 +1,4 @@
+<img width="1024" height="650" alt="Kindness Quest — Havenwood Village - Brave 10_27_2026 8_40_35 PM" src="https://github.com/user-attachments/assets/1b9e425a-436c-422b-81c7-42d008468960" />
 # 🌱 Kindness Quest: Havenwood Village
 
 > **Every small act of kindness can make a meaningful difference.**  
