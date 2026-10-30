@@ -9,6 +9,7 @@ export class VillageScene extends Phaser.Scene {
     super('VillageScene');
     this.interactables = [];
     this.activeTarget = null;
+    this.npcs = {};
     this.npcSprites = {};
   }
 
@@ -52,6 +53,7 @@ export class VillageScene extends Phaser.Scene {
     this.createWorldUpgrades();
     this.createAllLevelPropsAndItems();
     this.createVillagers();
+    this.createAmbientLife();
 
     this.waypointRing = this.add.circle(0, 0, 38).setStrokeStyle(4, 0xfacc15).setDepth(2000).setVisible(false);
     this.waypointLabel = this.add.text(0, 0, '', {
@@ -562,35 +564,216 @@ export class VillageScene extends Phaser.Scene {
     this.spawnVillager('npc_henderson', 1365, 555, 'char_elder_man', 'Talk to Mr. Henderson', () => this.talkHenderson());
   }
 
-  spawnVillager(id, x, y, texture, prompt, handler) {
-    const sprite = this.add.sprite(x, y, texture).setDepth(y);
-    this.tweens.add({
-      targets: sprite,
-      scaleY: 1.04,
-      duration: 1100 + Math.random() * 300,
-      yoyo: true,
-      repeat: -1
-    });
+  spawnVillager(id, x, y, texture, prompt, onInteract) {
+    const sprite = this.physics.add.sprite(x, y, texture);
+    sprite.setImmovable(true);
+    sprite.body.setSize(26, 20);
+    sprite.body.setOffset(5, 22);
+    sprite.setDepth(y);
+    this.obstacles.add(sprite);
 
-    const badge = this.add.text(x, y - 36, '!', {
+    const cleanName = prompt.replace('Talk to ', '');
+    const nameTag = this.add.text(x, y + 28, cleanName, {
+      fontFamily: 'Nunito',
+      fontSize: '12px',
+      fontStyle: 'bold',
+      color: '#ffffff',
+      backgroundColor: '#3b2d1f99',
+      padding: { x: 5, y: 2 }
+    }).setOrigin(0.5).setDepth(y + 1);
+
+    const questMarker = this.add.text(x, y - 34, '!', {
       fontFamily: 'Fredoka',
-      fontSize: '21px',
+      fontSize: '22px',
+      fontStyle: 'bold',
       color: '#facc15',
       stroke: '#3b2d1f',
       strokeThickness: 4
-    }).setOrigin(0.5).setDepth(y + 5).setVisible(false);
+    }).setOrigin(0.5).setDepth(y + 20);
 
-    this.npcSprites[id] = { sprite, badge };
-
-    this.interactables.push({
+    const interactableRef = {
       id,
-      key: 'T',
-      icon: '💬',
       x,
       y,
-      radius: 72,
+      radius: 68,
+      key: 'T',
+      icon: '💬',
       prompt,
-      onInteract: handler
+      onInteract: () => {
+        if (!gameState.settings.reducedMotion) {
+          this.tweens.add({
+            targets: sprite,
+            y: sprite.y - 8,
+            duration: 110,
+            yoyo: true,
+            repeat: 1
+          });
+        }
+        onInteract();
+      }
+    };
+
+    this.interactables.push(interactableRef);
+
+    this.npcs[id] = {
+      id,
+      sprite,
+      nameTag,
+      questMarker,
+      interactableRef,
+      homeX: x,
+      homeY: y,
+      targetX: x,
+      targetY: y,
+      roamRadius: 34,
+      moveSpeed: 28,
+      waitTimer: Phaser.Math.Between(600, 2400),
+      phaseOffset: Math.random() * Math.PI * 2
+    };
+    this.npcSprites[id] = { sprite, badge: questMarker };
+  }
+
+  createAmbientLife() {
+    this.butterflies = [];
+    this.ambientLeaves = [];
+
+    const bfKeys = [
+      'particle_butterfly_gold',
+      'particle_butterfly_blue',
+      'particle_butterfly_pink'
+    ];
+
+    // Anchor butterflies strictly to Flower Pots, the Community Garden, and Trees
+    const natureAnchors = [
+      // Grandma Evelyn's Cottage Flower Boxes
+      { x: 295, y: 318, radius: 18 },
+      { x: 405, y: 318, radius: 18 },
+      // Community Garden Beds (South)
+      { x: 705, y: 885, radius: 26 },
+      { x: 780, y: 885, radius: 26 },
+      { x: 855, y: 885, radius: 26 },
+      // Village Trees (Canopies away from roads)
+      { x: 190, y: 190, radius: 24 },
+      { x: 560, y: 185, radius: 24 },
+      { x: 1010, y: 190, radius: 24 },
+      { x: 210, y: 690, radius: 24 },
+      { x: 1360, y: 810, radius: 24 }
+    ];
+
+    natureAnchors.forEach((spot, i) => {
+      const angle = Math.random() * Math.PI * 2;
+      const startX = spot.x + Math.cos(angle) * 8;
+      const startY = spot.y + Math.sin(angle) * 6;
+
+      const sprite = this.add
+        .sprite(startX, startY, bfKeys[i % bfKeys.length])
+        .setDepth(spot.y + 30)
+        .setScale(0.72);
+
+      this.butterflies.push({
+        sprite,
+        anchorX: spot.x,
+        anchorY: spot.y,
+        orbitRadius: spot.radius,
+        angle,
+        orbitSpeed: Phaser.Math.FloatBetween(1.1, 1.8) * (i % 2 === 0 ? 1 : -1),
+        wingPhase: Math.random() * 10
+      });
+    });
+
+    // Subtle, sparse pollen motes near green spaces only (reduced from 14 to 5)
+    for (let i = 0; i < 5; i++) {
+      const lx = Phaser.Math.Between(200, 1400);
+      const ly = Phaser.Math.Between(200, 1000);
+      const particle = this.add.circle(lx, ly, 2.5, 0xfef08a, 0.45).setDepth(2100);
+
+      this.ambientLeaves.push({
+        node: particle,
+        speedX: Phaser.Math.FloatBetween(10, 18),
+        speedY: Phaser.Math.FloatBetween(5, 10),
+        swayOffset: Math.random() * 10
+      });
+    }
+  }
+
+  updateAmbientLife(time, delta) {
+    const dt = delta / 1000;
+    const reduced = gameState.settings.reducedMotion;
+
+    // 1. Update Roaming Villagers
+    Object.values(this.npcs).forEach((npc) => {
+      const { sprite, nameTag, questMarker, interactableRef } = npc;
+      const distToPlayer = Phaser.Math.Distance.Between(this.player.x, this.player.y, sprite.x, sprite.y);
+
+      if (distToPlayer < 95 || this.player.movementLocked || reduced) {
+        sprite.setAngle(0);
+        if (distToPlayer < 95) {
+          sprite.setFlipX(this.player.x < sprite.x);
+        }
+      } else {
+        npc.waitTimer -= delta;
+        const distToTarget = Phaser.Math.Distance.Between(sprite.x, sprite.y, npc.targetX, npc.targetY);
+
+        if (distToTarget > 4) {
+          const angle = Math.atan2(npc.targetY - sprite.y, npc.targetX - sprite.x);
+          sprite.x += Math.cos(angle) * npc.moveSpeed * dt;
+          sprite.y += Math.sin(angle) * npc.moveSpeed * dt;
+          sprite.body.updateFromGameObject();
+          sprite.setFlipX(Math.cos(angle) < -0.1);
+          sprite.setAngle(Math.sin(time * 0.012 + npc.phaseOffset) * 3.5);
+        } else {
+          sprite.setAngle(0);
+          sprite.scaleY = 1 + Math.sin(time * 0.005 + npc.phaseOffset) * 0.025;
+
+          if (npc.waitTimer <= 0) {
+            npc.waitTimer = Phaser.Math.Between(1800, 4200);
+            const randAngle = Phaser.Math.FloatBetween(0, Math.PI * 2);
+            const randDist = Phaser.Math.FloatBetween(10, npc.roamRadius);
+            npc.targetX = npc.homeX + Math.cos(randAngle) * randDist;
+            npc.targetY = npc.homeY + Math.sin(randAngle) * randDist;
+          }
+        }
+      }
+
+      sprite.setDepth(sprite.y);
+      nameTag.setPosition(sprite.x, sprite.y + 28).setDepth(sprite.y + 1);
+      questMarker
+        .setPosition(sprite.x, sprite.y - 34 + (reduced ? 0 : Math.sin(time * 0.008 + npc.phaseOffset) * 3))
+        .setDepth(sprite.y + 20);
+      interactableRef.x = sprite.x;
+      interactableRef.y = sprite.y;
+    });
+
+    this.butterflies.forEach((bf) => bf.sprite.setVisible(!reduced));
+    this.ambientLeaves.forEach((lf) => lf.node.setVisible(!reduced));
+    if (reduced) return;
+
+    // 2. Keep Butterflies Hovering Tightly Around Their Flower Box, Garden Bed, or Tree
+    this.butterflies.forEach((bf) => {
+      bf.angle += bf.orbitSpeed * dt;
+
+      // Figure-8 / organic flower-hover motion within their small radius
+      const offsetX = Math.cos(bf.angle) * bf.orbitRadius;
+      const offsetY = Math.sin(bf.angle * 2) * (bf.orbitRadius * 0.55);
+
+      const nextX = bf.anchorX + offsetX;
+      const nextY = bf.anchorY + offsetY;
+
+      bf.sprite.setFlipX(nextX < bf.sprite.x);
+      bf.sprite.x = nextX;
+      bf.sprite.y = nextY;
+
+      // Gentle wing flap
+      bf.sprite.scaleX = 0.3 + Math.abs(Math.sin(time * 0.022 + bf.wingPhase)) * 0.48;
+    });
+
+    // 3. Subtle Pollen Motes
+    this.ambientLeaves.forEach((lf) => {
+      lf.node.x += lf.speedX * dt;
+      lf.node.y += lf.speedY * dt + Math.sin(time * 0.004 + lf.swayOffset) * 0.15;
+
+      if (lf.node.x > 1500) lf.node.x = 100;
+      if (lf.node.y > 1100) lf.node.y = 100;
     });
   }
 
@@ -1505,6 +1688,7 @@ export class VillageScene extends Phaser.Scene {
 
   update(time, delta) {
     this.player.update(time, delta);
+    this.updateAmbientLife(time, delta);
 
     // Show Broom in Player's Hand during Level 2 when carrying Bamboo Broom
     if (gameState.currentLevel === 2 && gameState.hasItem('bamboo_broom')) {

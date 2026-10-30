@@ -147,6 +147,37 @@ export class BootScene extends Phaser.Scene {
     g.fillCircle(36, 8, 5);
     g.generateTexture('prop_flowerbox', 48, 28);
     g.clear();
+
+    // Dynamic Village Life Textures (Butterflies & Leaves)
+    const bfColors = [
+      { key: 'particle_butterfly_gold', color: 0xfacc15, accent: 0xfef08a },
+      { key: 'particle_butterfly_blue', color: 0x38bdf8, accent: 0xbae6fd },
+      { key: 'particle_butterfly_pink', color: 0xf472b6, accent: 0xfbcfe8 }
+    ];
+
+    bfColors.forEach(({ key, color, accent }) => {
+      const butterfly = this.make.graphics({ x: 0, y: 0, add: false });
+      butterfly.fillStyle(color, 1);
+      butterfly.fillCircle(5, 6, 4.5);
+      butterfly.fillCircle(13, 6, 4.5);
+      butterfly.fillCircle(6, 11, 3.5);
+      butterfly.fillCircle(12, 11, 3.5);
+      butterfly.fillStyle(accent, 1);
+      butterfly.fillCircle(5, 5, 2);
+      butterfly.fillCircle(13, 5, 2);
+      butterfly.fillStyle(0x3b2d1f, 1);
+      butterfly.fillRoundedRect(8, 3, 2, 11, 1);
+      butterfly.generateTexture(key, 18, 16);
+      butterfly.destroy();
+    });
+
+    const leaf = this.make.graphics({ x: 0, y: 0, add: false });
+    leaf.fillStyle(0xa3e635, 0.9);
+    leaf.fillEllipse(6, 5, 10, 6);
+    leaf.lineStyle(1, 0x3f6212, 0.8);
+    leaf.lineBetween(2, 5, 10, 5);
+    leaf.generateTexture('particle_leaf', 12, 10);
+    leaf.destroy();
   }
 
   drawCharacter(g, shirtColor, hairColor) {
